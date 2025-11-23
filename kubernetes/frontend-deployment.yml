@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conduit-frontend
+  labels:
+    app: conduit-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: conduit-frontend
+  template:
+    metadata:
+      labels:
+        app: conduit-frontend
+    spec:
+      containers:
+        - name: conduit-frontend
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conduit-frontend
+  labels:
+    app: conduit-frontend
+spec:
+  type: NodePort
+  selector:
+    app: conduit-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
