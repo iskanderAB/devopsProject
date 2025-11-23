@@ -50,7 +50,6 @@ jobs:
 
   build-frontend-image:
     needs: changes
-    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     outputs:
       frontend_image: ${{ steps.set_frontend_image.outputs.frontend_image }}
