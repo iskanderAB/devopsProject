@@ -84,6 +84,38 @@ jobs:
           docker build -t ${DOCKERHUB}/conduit-backend:${VERSION} -f docker/dockerfileBack ./backend
           echo "backend_image=true" >> $GITHUB_OUTPUT
 
+  push-images:
+    needs: [build-frontend-image, build-backend-image]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push frontend image
+        if: needs.build-frontend-image.outputs.frontend_image == 'true'
+        env:
+          VERSION: ${{ env.VERSION }}
+          DOCKERHUB: ${{ env.DOCKERHUB }}
+        run: |
+          docker build -t ${DOCKERHUB}/conduit-frontend:${VERSION} -f docker/dockerfileFront ./frontend
+          docker push ${DOCKERHUB}/conduit-frontend:${VERSION}
+
+      - name: Build and push backend image
+        if: needs.build-backend-image.outputs.backend_image == 'true'
+        env:
+          VERSION: ${{ env.VERSION }}
+          DOCKERHUB: ${{ env.DOCKERHUB }}
+        run: |
+          docker build -t ${DOCKERHUB}/conduit-backend:${VERSION} -f docker/dockerfileBack ./backend
+          docker push ${DOCKERHUB}/conduit-backend:${VERSION}
+
   # deploy:
   #   needs: [build-frontend-image, build-backend-image]
   #   runs-on: ubuntu-latest
