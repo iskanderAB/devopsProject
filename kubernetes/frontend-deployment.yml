@@ -17,6 +17,7 @@ spec:
       containers:
         - name: conduit-frontend
           image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
