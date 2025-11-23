@@ -7,7 +7,7 @@ on:
 
 env:
   VERSION: "mp2l-dev"
-  DOCKERHUB: ${{ vars.DOCKERHUB }}
+  DOCKERHUB: ${{ secrets.DOCKERHUB }}
 
 jobs:
   changes:
