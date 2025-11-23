@@ -109,6 +109,7 @@ jobs:
 
       - name: Copy Kubernetes files to Azure VM
         run: |
+          chmod 600 ~/.ssh/id_rsa
           scp -r kubernetes/ ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/home/kubernetes/
 
       - name: Deploy MySQL
