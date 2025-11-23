@@ -51,7 +51,7 @@ jobs:
   build-frontend-image:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       frontend_image: ${{ steps.set_frontend_image.outputs.frontend_image }}
     steps:
@@ -70,7 +70,7 @@ jobs:
   build-backend-image:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     outputs:
       backend_image: ${{ steps.set_backend_image.outputs.backend_image }}
     steps:
