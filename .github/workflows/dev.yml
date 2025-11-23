@@ -117,7 +117,7 @@ jobs:
 
       - name: Copy Kubernetes files to Azure VM
         run: |
-          scp kubernetes/mysql-deplyment.yml kubernetes/frontend-service.yml kubernetes/backend-service.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
+          scp kubernetes/mysql-deplyment.yml kubernetes/mysql-service.yml kubernetes/frontend-service.yml kubernetes/backend-service.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
 
       - name: Copy frontend deployment to Azure VM
         if: needs.build-and-push-frontend.result == 'success'
@@ -129,10 +129,13 @@ jobs:
         run: |
           scp /tmp/backend-deployment.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
 
-      - name: Deploy MySQL
+      - name: Deploy MySQL and Service
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
+            sudo kubectl apply -f ~/mysql-service.yml
             sudo kubectl apply -f ~/mysql-deplyment.yml
+            echo "Waiting for MySQL to be ready..."
+            sudo kubectl wait --for=condition=ready pod -l app=mysql --timeout=300s
           EOF
 
       - name: Deploy frontend to Minikube
