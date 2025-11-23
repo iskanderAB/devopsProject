@@ -105,51 +105,35 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.AZURE_VM_IP }} >> ~/.ssh/known_hosts
 
-      - name: Prepare frontend deployment file
-        if: needs.build-and-push-frontend.result == 'success'
-        run: |
-          sed "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-frontend:${{ env.VERSION }}|g" kubernetes/frontend-deployment.yml > /tmp/frontend-deployment.yml
-
-      - name: Prepare backend deployment file
-        if: needs.build-and-push-backend.result == 'success'
-        run: |
-          sed "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-backend:${{ env.VERSION }}|g" kubernetes/backend-deployment.yml > /tmp/backend-deployment.yml
-
       - name: Copy Kubernetes files to Azure VM
         run: |
-          scp kubernetes/mysql-deplyment.yml kubernetes/frontend-service.yml kubernetes/backend-service.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
-
-      - name: Copy frontend deployment to Azure VM
-        if: needs.build-and-push-frontend.result == 'success'
-        run: |
-          scp /tmp/frontend-deployment.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
-
-      - name: Copy backend deployment to Azure VM
-        if: needs.build-and-push-backend.result == 'success'
-        run: |
-          scp /tmp/backend-deployment.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
+          scp -r kubernetes/ ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
 
       - name: Deploy MySQL
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            kubectl apply -f ~/mysql-deplyment.yml
+            kubectl apply -f ~/kubernetes/mysql-deplyment.yml
           EOF
 
       - name: Deploy frontend to Minikube
         if: needs.build-and-push-frontend.result == 'success'
+        env:
+          VERSION: ${{ env.VERSION }}
+          DOCKERHUB: ${{ env.DOCKERHUB }}
         run: |
-          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            kubectl apply -f ~/frontend-service.yml
-            kubectl apply -f ~/frontend-deployment.yml
+          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << EOF
+            sed "s|IMAGE_PLACEHOLDER|${DOCKERHUB}/conduit-frontend:${VERSION}|g" ~/kubernetes/frontend-deployment.yml | kubectl apply -f -
             kubectl rollout status deployment/conduit-frontend
           EOF
 
       - name: Deploy backend to Minikube
         if: needs.build-and-push-backend.result == 'success'
+        env:
+          VERSION: ${{ env.VERSION }}
+          DOCKERHUB: ${{ env.DOCKERHUB }}
         run: |
-          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            kubectl apply -f ~/backend-service.yml
-            kubectl apply -f ~/backend-deployment.yml
+          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << EOF
+            sed "s|IMAGE_PLACEHOLDER|${DOCKERHUB}/conduit-backend:${VERSION}|g" ~/kubernetes/backend-deployment.yml | kubectl apply -f -
             kubectl rollout status deployment/conduit-backend
           EOF
 
