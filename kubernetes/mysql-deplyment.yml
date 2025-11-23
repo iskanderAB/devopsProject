@@ -25,10 +25,10 @@ metadata:
   name: mysql-secret
 type: Opaque
 stringData:
-  root-password: "your-secure-password-here"
-  database: "myapp"
-  user: "appuser"
-  password: "user-password-here"
+  root-password: "conduit123"
+  database: "conduit"
+  user: "conduit_user"
+  password: "conduit_pass"
 ---
 apiVersion: apps/v1
 kind: StatefulSet

@@ -44,8 +44,6 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: password
-            - name: PROD_DB_LOGGING
-              value: "false"
           resources:
             requests:
               memory: "256Mi"
