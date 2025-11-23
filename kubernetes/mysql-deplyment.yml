@@ -25,7 +25,7 @@ metadata:
   name: mysql-secret
 type: Opaque
 stringData:
-  root-password: "conduit123"
+  root-password: "conduit"
   database: "conduit"
 ---
 apiVersion: apps/v1
