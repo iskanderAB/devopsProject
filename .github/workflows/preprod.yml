@@ -1,0 +1,140 @@
+name: PREPROD
+
+on:
+  push:
+    branches:
+      - "mp2l-preprod"
+
+env:
+  VERSION: "mp2l-preprod"
+  DOCKERHUB: ${{ vars.DOCKERHUB }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.set_frontend.outputs.frontend }}
+      backend: ${{ steps.set_backend.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: set_frontend
+        run: |
+          TARGET_DIR1="frontend"
+          TARGET_DIR2="docker/dockerfileFront"
+          LATEST_COMMIT=$(git rev-parse HEAD)
+          changes_detected=false 
+          if git diff --name-only $LATEST_COMMIT~1..$LATEST_COMMIT | grep -E "^${TARGET_DIR1}|^${TARGET_DIR2}"; then
+            echo "Changes detected in frontend"
+            changes_detected=true
+          else
+            echo "No changes detected in frontend"
+          fi    
+          echo "frontend=$changes_detected" >> $GITHUB_OUTPUT
+
+      - id: set_backend
+        run: |
+          TARGET_DIR1="backend"
+          TARGET_DIR2="docker/dockerfileBack"
+          LATEST_COMMIT=$(git rev-parse HEAD)
+          changes_detected=false 
+          if git diff --name-only $LATEST_COMMIT~1..$LATEST_COMMIT | grep -E "^${TARGET_DIR1}|^${TARGET_DIR2}"; then
+            echo "Changes detected in backend"
+            changes_detected=true
+          else
+            echo "No changes detected in backend"
+          fi    
+          echo "backend=$changes_detected" >> $GITHUB_OUTPUT
+
+  build-frontend-image:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: self-hosted
+    outputs:
+      frontend_image: ${{ steps.set_frontend_image.outputs.frontend_image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build frontend image
+        id: set_frontend_image
+        env:
+          VERSION: ${{ env.VERSION }}
+          DOCKERHUB: ${{ env.DOCKERHUB }}
+        run: |
+          docker build -t ${DOCKERHUB}/conduit-frontend:${VERSION} -f docker/dockerfileFront ./frontend
+          echo "frontend_image=true" >> $GITHUB_OUTPUT
+
+  build-backend-image:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: self-hosted
+    outputs:
+      backend_image: ${{ steps.set_backend_image.outputs.backend_image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build backend image
+        id: set_backend_image
+        env:
+          VERSION: ${{ env.VERSION }}
+          DOCKERHUB: ${{ env.DOCKERHUB }}
+        run: |
+          docker build -t ${DOCKERHUB}/conduit-backend:${VERSION} -f docker/dockerfileBack ./backend
+          echo "backend_image=true" >> $GITHUB_OUTPUT
+
+  security-scan:
+    needs: changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "sarif"
+          output: "trivy-results.sarif"
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+  deploy:
+    needs: [build-frontend-image, build-backend-image]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "Deploying to Kubernetes cluster..."
+          # Add your Kubernetes deployment commands here
+          # For example:
+          # kubectl apply -f kubernetes/
+          # kubectl rollout status deployment/conduit-frontend
+          # kubectl rollout status deployment/conduit-backend
+
+      - name: Run health checks
+        run: |
+          echo "Running health checks..."
+          # Add health check commands here
+          # kubectl get pods -l app=conduit
+          # curl -f http://your-k8s-ingress-url/health || exit 1
+
+      - name: Notify deployment
+        if: success()
+        run: |
+          echo "Deployment successful!"
+          # Add notification logic here (Slack, Discord, etc.)
