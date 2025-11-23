@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: conduit-frontend
+  labels:
+    app: conduit-frontend
+spec:
+  type: NodePort
+  selector:
+    app: conduit-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30080
