@@ -19,15 +19,6 @@ data:
     default-storage-engine=InnoDB
     max_connections=1000
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret
-type: Opaque
-stringData:
-  root-password: "conduit"
-  database: "conduit"
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -60,10 +51,6 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: database
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: password
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
