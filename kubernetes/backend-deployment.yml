@@ -35,15 +35,12 @@ spec:
                   name: mysql-secret
                   key: database
             - name: PROD_DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: user
+              value: "root"
             - name: PROD_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
-                  key: password
+                  key: root-password
           resources:
             requests:
               memory: "256Mi"

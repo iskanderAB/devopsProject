@@ -27,8 +27,6 @@ type: Opaque
 stringData:
   root-password: "conduit123"
   database: "conduit"
-  user: "conduit_user"
-  password: "conduit_pass"
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -62,12 +60,6 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: database
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: user
-            - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
