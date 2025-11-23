@@ -17,30 +17,35 @@ spec:
       containers:
         - name: conduit-backend
           image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
           ports:
             - containerPort: 3000
           env:
             - name: NODE_ENV
               value: "production"
-            - name: DB_HOST
+            - name: PORT
+              value: "3000"
+            - name: PROD_DB_HOSTNAME
               value: "mysql"
-            - name: DB_PORT
-              value: "3306"
-            - name: DB_NAME
+            - name: PROD_DB_DIALECT
+              value: "mysql"
+            - name: PROD_DB_NAME
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
                   key: database
-            - name: DB_USER
+            - name: PROD_DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
                   key: user
-            - name: DB_PASSWORD
+            - name: PROD_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
                   key: password
+            - name: PROD_DB_LOGGING
+              value: "false"
           resources:
             requests:
               memory: "256Mi"
@@ -52,11 +57,15 @@ spec:
             httpGet:
               path: /api/health
               port: 3000
-            initialDelaySeconds: 30
+            initialDelaySeconds: 45
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /api/health
               port: 3000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
