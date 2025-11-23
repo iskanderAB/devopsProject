@@ -133,36 +133,36 @@ jobs:
       - name: Deploy MySQL
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            kubectl apply -f ~/mysql-deplyment.yml
+            sudo kubectl apply -f ~/mysql-deplyment.yml
           EOF
 
       - name: Deploy frontend to Minikube
         if: needs.build-and-push-frontend.result == 'success'
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            kubectl apply -f ~/frontend-service.yml
-            kubectl apply -f ~/frontend-deployment.yml
-            kubectl rollout status deployment/conduit-frontend
+            sudo kubectl apply -f ~/frontend-service.yml
+            sudo kubectl apply -f ~/frontend-deployment.yml
+            sudo kubectl rollout status deployment/conduit-frontend
           EOF
 
       - name: Deploy backend to Minikube
         if: needs.build-and-push-backend.result == 'success'
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            kubectl apply -f ~/backend-service.yml
-            kubectl apply -f ~/backend-deployment.yml
-            kubectl rollout status deployment/conduit-backend
+            sudo kubectl apply -f ~/backend-service.yml
+            sudo kubectl apply -f ~/backend-deployment.yml
+            sudo kubectl rollout status deployment/conduit-backend
           EOF
 
       - name: Verify deployment
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
             echo "=== Deployments ==="
-            kubectl get deployments
+            sudo kubectl get deployments
             echo "=== Pods ==="
-            kubectl get pods
+            sudo kubectl get pods
             echo "=== Services ==="
-            kubectl get services
+            sudo kubectl get services
           EOF
 
       - name: Notify deployment success
