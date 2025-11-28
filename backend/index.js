@@ -35,6 +35,14 @@ app.use("/api/user", userRoutes);
 app.use("/api/articles", articlesRoutes);
 app.use("/api/profiles", profilesRoutes);
 app.use("/api/tags", tagsRoutes);
+app.get("/api/health", async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.json({ status: "ok" });
+  } catch (error) {
+    res.status(503).json({ status: "error", message: error.message });
+  }
+});
 app.get("*", (req, res) =>
   res.status(404).json({ errors: { body: ["Not found"] } }),
 );
