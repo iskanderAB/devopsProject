@@ -6,7 +6,7 @@ on:
       - "mp2l-dev"
 
 env:
-  VERSION: "mp2l-dev"
+  VERSION: "mp2l-dev-${{ github.sha }}"
   DOCKERHUB: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
