@@ -7,6 +7,11 @@ on:
         description: "Seeder filename (leave 'all' to run every seeder)"
         default: "all"
         required: true
+  push:
+    branches:
+      - mp2l-dev
+    paths:
+      - ".github/workflows/seed.yml"
 
 jobs:
   run-seeder:
