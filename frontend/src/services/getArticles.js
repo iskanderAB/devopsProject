@@ -17,6 +17,7 @@ async function getArticles({ headers, limit = 3, location, page = 0, tagName, us
     return data;
   } catch (error) {
     errorHandler(error);
+    return { articles: [], articlesCount: 0 };
   }
 }
 

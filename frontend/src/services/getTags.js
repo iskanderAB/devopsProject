@@ -8,6 +8,7 @@ async function getTags() {
     return data.tags;
   } catch (error) {
     errorHandler(error);
+    return [];
   }
 }
 

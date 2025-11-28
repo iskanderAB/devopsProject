@@ -20,7 +20,7 @@ function PopularTags() {
       <div className="sidebar">
         <h6>Popular Tags</h6>
         <div className="tag-list">
-          {tags.length > 0 ? (
+          {tags?.length > 0 ? (
             <TagButton tagsList={tags} />
           ) : loading ? (
             <p>Loading tags...</p>

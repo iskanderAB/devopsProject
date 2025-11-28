@@ -51,6 +51,7 @@ jobs:
   build-and-push-frontend:
     needs: changes
     runs-on: ubuntu-latest
+    if: needs.changes.outputs.frontend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -71,6 +72,7 @@ jobs:
   build-and-push-backend:
     needs: changes
     runs-on: ubuntu-latest
+    if: needs.changes.outputs.backend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v3

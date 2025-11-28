@@ -8,6 +8,7 @@ async function getComments({ slug }) {
     return data.comments;
   } catch (error) {
     errorHandler(error);
+    return [];
   }
 }
 

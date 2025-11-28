@@ -15,7 +15,7 @@ function ProfileFavArticles() {
     <div className="article-preview">
       <em>Loading {username} favorites articles...</em>
     </div>
-  ) : articles.length > 0 ? (
+  ) : articles?.length > 0 ? (
     <>
       <ArticlesPreview
         articles={articles}

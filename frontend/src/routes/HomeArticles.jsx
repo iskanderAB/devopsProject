@@ -16,7 +16,7 @@ function HomeArticles() {
     <div className="article-preview">
       <em>Loading articles list...</em>
     </div>
-  ) : articles.length > 0 ? (
+  ) : articles?.length > 0 ? (
     <>
       <ArticlesPreview
         articles={articles}

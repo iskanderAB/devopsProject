@@ -15,7 +15,7 @@ function ProfileArticles() {
     <div className="article-preview">
       <em>Loading {username} articles...</em>
     </div>
-  ) : articles.length > 0 ? (
+  ) : articles?.length > 0 ? (
     <>
       <ArticlesPreview
         articles={articles}
