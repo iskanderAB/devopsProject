@@ -36,8 +36,8 @@ jobs:
           SEED_NAME: ${{ github.event.inputs.seedName }}
         run: |
           if [ "$SEED_NAME" = "all" ]; then
-            REMOTE_CMD="sudo kubectl exec deploy/conduit-backend -- npx sequelize-cli db:seed:all"
+            REMOTE_CMD="sudo kubectl exec deploy/conduit-backend -- sh -c 'cd /app && NODE_ENV=production npx sequelize-cli db:seed:all'"
           else
-            REMOTE_CMD="sudo kubectl exec deploy/conduit-backend -- npx sequelize-cli db:seed --seed $SEED_NAME"
+            REMOTE_CMD="sudo kubectl exec deploy/conduit-backend -- sh -c 'cd /app && NODE_ENV=production npx sequelize-cli db:seed --seed $SEED_NAME'"
           fi
           ssh "$AZURE_VM_USER@$AZURE_VM_IP" "set -e; $REMOTE_CMD"
