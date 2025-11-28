@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 3001;
 const express = require("express");
 const cors = require("cors");
 const { sequelize } = require("./models");
+const config = require("./config/config.js")[env];
 const errorHandler = require("./middleware/errorHandler");
 const requestLogger = require("./middleware/requestLogger");
 
@@ -58,6 +59,70 @@ app.get("/api/health", async (req, res) => {
   } catch (error) {
     console.error("[HEALTH] ✗ Health check failed:", error.message);
     res.status(503).json({ status: "error", message: error.message });
+  }
+});
+app.get("/api/debug/status", async (req, res) => {
+  try {
+    console.log("[DEBUG] Status check requested");
+    
+    let dbStatus = "disconnected";
+    let dbError = null;
+    try {
+      await sequelize.authenticate();
+      dbStatus = "connected";
+      console.log("[DEBUG] ✓ Database connection verified");
+    } catch (error) {
+      dbError = {
+        name: error.name,
+        message: error.message,
+        code: error.code
+      };
+      console.error("[DEBUG] ✗ Database connection failed:", error.message);
+    }
+    
+    const status = {
+      server: {
+        status: "running",
+        environment: env,
+        nodeVersion: process.version,
+        port: PORT,
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        timestamp: new Date().toISOString()
+      },
+      database: {
+        status: dbStatus,
+        config: {
+          host: config.host || process.env.PROD_DB_HOSTNAME || process.env.DEV_DB_HOSTNAME,
+          database: config.database || process.env.PROD_DB_NAME || process.env.DEV_DB_NAME,
+          username: config.username || process.env.PROD_DB_USERNAME || process.env.DEV_DB_USERNAME,
+          dialect: config.dialect || process.env.PROD_DB_DIALECT || process.env.DEV_DB_DIALECT
+        },
+        error: dbError
+      },
+      routes: {
+        available: [
+          "/api/users (POST - signup)",
+          "/api/users/login (POST - signin)",
+          "/api/user (GET, PUT)",
+          "/api/articles (GET, POST)",
+          "/api/profiles/:username (GET)",
+          "/api/tags (GET)",
+          "/api/health (GET)",
+          "/api/debug/status (GET)"
+        ]
+      }
+    };
+    
+    console.log("[DEBUG] Status response:", JSON.stringify(status, null, 2));
+    res.json(status);
+  } catch (error) {
+    console.error("[DEBUG] ✗ Status check failed:", error);
+    res.status(500).json({ 
+      status: "error", 
+      message: error.message,
+      stack: error.stack 
+    });
   }
 });
 app.get("*", (req, res) =>
