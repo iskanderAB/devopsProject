@@ -22,8 +22,9 @@ jobs:
           host: ${{ secrets.AZURE_VM_IP }}
           username: ${{ secrets.AZURE_VM_USER }}
           key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
-          source: "kubernetes/monitoring/*"
-          target: "monitoring"
+          source: "kubernetes/monitoring/"
+          target: "~/"
+          strip_components: 1
 
       - name: Apply manifests remotely
         uses: appleboy/ssh-action@v0.1.7
@@ -33,9 +34,8 @@ jobs:
           key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
           script: |
             set -euo pipefail
-            REMOTE_DIR="$HOME/monitoring"
-            sudo kubectl apply -f "$REMOTE_DIR/namespace.yaml"
-            sudo kubectl apply -f "$REMOTE_DIR/"
+            sudo kubectl apply -f ~/monitoring/namespace.yaml
+            sudo kubectl apply -f ~/monitoring/
             sudo kubectl rollout status deployment/prometheus -n monitoring
             sudo kubectl rollout status deployment/grafana -n monitoring
             sudo kubectl rollout status deployment/demo-app -n monitoring
