@@ -10,7 +10,7 @@ function PopularTags() {
     setLoading(true);
 
     getTags()
-      .then(setTags)
+      .then((data) => setTags(Array.isArray(data) ? data : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);

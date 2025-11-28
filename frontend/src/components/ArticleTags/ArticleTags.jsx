@@ -1,6 +1,6 @@
-function ArticleTags({ tagList }) {
+function ArticleTags({ tagList = [] }) {
   return (
-    tagList?.length > 0 && (
+    Array.isArray(tagList) && tagList.length > 0 && (
       <ul className="tag-list">
         {tagList.map((tag) => (
           <li key={tag} className="tag-default tag-pill tag-outline">
