@@ -8,12 +8,38 @@ const env = process.env.NODE_ENV || "development";
 const config = require(__dirname + "/../config/config.js")[env];
 const db = {};
 
+console.log(`[SEQUELIZE] Initializing connection with config:`, {
+  database: config.database,
+  username: config.username,
+  host: config.host,
+  dialect: config.dialect,
+  port: config.port || 3306
+});
+
 const sequelize = new Sequelize(
   config.database,
   config.username,
   config.password,
-  config,
+  {
+    ...config,
+    logging: (msg) => console.log(`[SEQUELIZE] ${msg}`),
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  }
 );
+
+// Événements de connexion
+sequelize.beforeConnect((config) => {
+  console.log('[SEQUELIZE] Attempting to connect to database...');
+});
+
+sequelize.afterConnect((connection, config) => {
+  console.log('[SEQUELIZE] ✓ Successfully connected to database');
+});
 
 fs.readdirSync(__dirname)
   .filter((file) => {
