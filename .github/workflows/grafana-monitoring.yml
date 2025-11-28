@@ -33,8 +33,9 @@ jobs:
           key: ${{ secrets.AZURE_SSH_PRIVATE_KEY }}
           script: |
             set -euo pipefail
-            sudo kubectl apply -f monitoring/namespace.yaml
-            sudo kubectl apply -f monitoring/
+            REMOTE_DIR="$HOME/monitoring"
+            sudo kubectl apply -f "$REMOTE_DIR/namespace.yaml"
+            sudo kubectl apply -f "$REMOTE_DIR/"
             sudo kubectl rollout status deployment/prometheus -n monitoring
             sudo kubectl rollout status deployment/grafana -n monitoring
             sudo kubectl rollout status deployment/demo-app -n monitoring
