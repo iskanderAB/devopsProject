@@ -1,0 +1,38 @@
+name: Seed Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      seedName:
+        description: "Seeder filename (leave 'all' to run every seeder)"
+        default: "all"
+        required: true
+
+jobs:
+  run-seeder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH to Azure VM
+        env:
+          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AZURE_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$AZURE_VM_IP" >> ~/.ssh/known_hosts
+
+      - name: Run Sequelize seed command
+        env:
+          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+          AZURE_VM_USER: ${{ secrets.AZURE_VM_USER }}
+          SEED_NAME: ${{ github.event.inputs.seedName }}
+        run: |
+          if [ "$SEED_NAME" = "all" ]; then
+            REMOTE_CMD="sudo kubectl exec deploy/conduit-backend -- npx sequelize-cli db:seed:all"
+          else
+            REMOTE_CMD="sudo kubectl exec deploy/conduit-backend -- npx sequelize-cli db:seed --seed $SEED_NAME"
+          fi
+          ssh "$AZURE_VM_USER@$AZURE_VM_IP" "set -e; $REMOTE_CMD"
