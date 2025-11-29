@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "mp2l-dev"
-      - "feature/addgrafana"
 
 env:
   VERSION: "mp2l-dev-${{ github.sha }}"
