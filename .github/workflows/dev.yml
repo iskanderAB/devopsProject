@@ -139,19 +139,19 @@ jobs:
         if: needs.build-and-push-frontend.result == 'success'
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            echo "=== Deploying Frontend ==="
-            sudo kubectl apply -f ~/tmp/kubernetes/frontend-service.yml
-            sudo kubectl apply -f ~/tmp/kubernetes/frontend-deployment.yml
-            echo "⏳ Waiting for frontend rollout..."
-            sudo kubectl rollout status deployment/conduit-frontend --timeout=300s
-           EOF
+           echo "=== Deploying Frontend ==="
+           sudo kubectl apply -f ~/kubernetes/frontend-service.yml
+           sudo kubectl apply -f ~/kubernetes/frontend-deployment.yml
+           echo "⏳ Waiting for frontend rollout..."
+           sudo kubectl rollout status deployment/conduit-frontend --timeout=300s
+          EOF
 
       - name: Deploy backend to Minikube
         if: needs.build-and-push-backend.result == 'success'
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
             echo "=== Deploying Backend ==="
-            sudo kubectl apply -f ~/tmp/kubernetes/backend-service.yml
-            sudo kubectl apply -f ~/tmp/kubernetes/backend-deployment.yml
+            sudo kubectl apply -f ~/kubernetes/backend-service.yml
+            sudo kubectl apply -f ~/kubernetes/backend-deployment.yml
             sudo kubectl rollout status deployment/conduit-backend --timeout=300s
-           EOF
+          EOF
