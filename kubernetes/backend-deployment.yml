@@ -41,6 +41,10 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: root-password
+            - name: JWT_SECRET
+              value: "mySecretKey123"
+            - name: JWT_EXPIRES_IN
+              value: "7d"
           resources:
             requests:
               memory: "256Mi"
