@@ -120,43 +120,38 @@ jobs:
         if: needs.build-and-push-backend.result == 'success'
         run: |
           sed "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-backend:${{ env.VERSION }}|g" kubernetes/backend-deployment.yml > /tmp/backend-deployment.yml
-
-      - name: Copy base Kubernetes files to Azure VM
+      - name: Prepare kubernetes folder for deploy
         run: |
-          scp kubernetes/frontend-service.yml \
-              kubernetes/backend-service.yml \
-              ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
+          rm -rf /tmp/kubernetes || true
+          cp -r kubernetes /tmp/kubernetes
+          if [ "${{ needs.build-and-push-frontend.result }}" = "success" ]; then
+            sed -i "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-frontend:${{ env.VERSION }}|g" /tmp/kubernetes/frontend-deployment.yml
+          fi
+          if [ "${{ needs.build-and-push-backend.result }}" = "success" ]; then
+            sed -i "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-backend:${{ env.VERSION }}|g" /tmp/kubernetes/backend-deployment.yml
+          fi
 
-      - name: Copy frontend deployment to Azure VM
-        if: needs.build-and-push-frontend.result == 'success'
+      - name: Copy kubernetes folder to Azure VM
         run: |
-          scp /tmp/frontend-deployment.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
-
-      - name: Copy backend deployment to Azure VM
-        if: needs.build-and-push-backend.result == 'success'
-        run: |
-          scp /tmp/backend-deployment.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
+          scp -r /tmp/kubernetes ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
 
       - name: Deploy frontend to Minikube
         if: needs.build-and-push-frontend.result == 'success'
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
             echo "=== Deploying Frontend ==="
-            sudo kubectl apply -f ~/frontend-service.yml
-            sudo kubectl apply -f ~/frontend-deployment.yml
+            sudo kubectl apply -f ~/tmp/kubernetes/frontend-service.yml
+            sudo kubectl apply -f ~/tmp/kubernetes/frontend-deployment.yml
             echo "⏳ Waiting for frontend rollout..."
             sudo kubectl rollout status deployment/conduit-frontend --timeout=300s
-            echo "✅ Frontend deployed successfully"
-          EOF
+           EOF
 
       - name: Deploy backend to Minikube
         if: needs.build-and-push-backend.result == 'success'
         run: |
           ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
             echo "=== Deploying Backend ==="
-            sudo kubectl apply -f ~/backend-service.yml
-            sudo kubectl apply -f ~/backend-deployment.yml
-            echo "⏳ Waiting for backend rollout..."
+            sudo kubectl apply -f ~/tmp/kubernetes/backend-service.yml
+            sudo kubectl apply -f ~/tmp/kubernetes/backend-deployment.yml
             sudo kubectl rollout status deployment/conduit-backend --timeout=300s
-            echo "✅ Backend deployed successfully"
-          EOF
+           EOF
