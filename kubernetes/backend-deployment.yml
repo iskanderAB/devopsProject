@@ -22,18 +22,30 @@ spec:
             - containerPort: 3000
           env:
             - name: NODE_ENV
-              value: "production"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: node-env
             - name: PORT
-              value: "3000"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: port
             - name: PROD_DB_HOSTNAME
-              value: "mysql"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: prod-db-hostname
             - name: PROD_DB_DIALECT
-              value: "mysql"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: prod-db-dialect
             - name: PROD_DB_NAME
               valueFrom:
                 secretKeyRef:
-                  name: mysql-secret
-                  key: database
+                  name: backend-secret
+                  key: prod-db-name
             - name: PROD_DB_USERNAME
               value: "root"
             - name: PROD_DB_PASSWORD
@@ -42,9 +54,15 @@ spec:
                   name: mysql-secret
                   key: root-password
             - name: JWT_SECRET
-              value: "mySecretKey123"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: jwt-secret
             - name: JWT_EXPIRES_IN
-              value: "7d"
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: jwt-expires-in
           resources:
             requests:
               memory: "256Mi"
