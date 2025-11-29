@@ -8,6 +8,36 @@ const config = require("./config/config.js")[env];
 const errorHandler = require("./middleware/errorHandler");
 const requestLogger = require("./middleware/requestLogger");
 
+// Prometheus metrics
+const promClient = require("prom-client");
+const collectDefaultMetrics = promClient.collectDefaultMetrics;
+const Registry = promClient.Registry;
+const register = new Registry();
+
+// Collecter les métriques par défaut (CPU, mémoire, etc.)
+collectDefaultMetrics({ register });
+
+// Métriques personnalisées
+const httpRequestDuration = new promClient.Histogram({
+  name: "http_request_duration_seconds",
+  help: "Duration of HTTP requests in seconds",
+  labelNames: ["method", "route", "status_code"],
+  registers: [register],
+});
+
+const httpRequestTotal = new promClient.Counter({
+  name: "http_requests_total",
+  help: "Total number of HTTP requests",
+  labelNames: ["method", "route", "status_code"],
+  registers: [register],
+});
+
+const dbConnectionStatus = new promClient.Gauge({
+  name: "db_connection_status",
+  help: "Database connection status (1 = connected, 0 = disconnected)",
+  registers: [register],
+});
+
 const usersRoutes = require("./routes/users");
 const userRoutes = require("./routes/user");
 const articlesRoutes = require("./routes/articles");
@@ -21,6 +51,26 @@ app.use(express.json());
 // Middleware de logging détaillé (doit être après express.json())
 app.use(requestLogger);
 
+// Middleware pour collecter les métriques HTTP
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  res.on("finish", () => {
+    const duration = (Date.now() - start) / 1000;
+    const route = req.route ? req.route.path : req.path;
+    
+    httpRequestDuration
+      .labels(req.method, route, res.statusCode.toString())
+      .observe(duration);
+    
+    httpRequestTotal
+      .labels(req.method, route, res.statusCode.toString())
+      .inc();
+  });
+  
+  next();
+});
+
 (async () => {
   try {
     console.log(`[DB] Attempting to connect to ${env} database...`);
@@ -32,11 +82,13 @@ app.use(requestLogger);
     });
     await sequelize.sync({ alter: true });
     console.log(`[DB] ✓ Connection with ${env} database has been established successfully.`);
+    dbConnectionStatus.set(1); // Connexion réussie
   } catch (error) {
     console.error(`[DB] ✗ Unable to connect to the database:`);
     console.error(`[DB] Error name: ${error.name}`);
     console.error(`[DB] Error message: ${error.message}`);
     console.error(`[DB] Full error:`, error);
+    dbConnectionStatus.set(0); // Connexion échouée
   }
 })();
 
@@ -45,6 +97,18 @@ if (process.env.NODE_ENV === "production") {
 } else {
   app.get("/", (req, res) => res.json({ status: "API is running on /api" }));
 }
+
+// Endpoint Prometheus metrics (doit être avant les autres routes pour éviter l'interception)
+app.get("/metrics", async (req, res) => {
+  try {
+    res.set("Content-Type", register.contentType);
+    const metrics = await register.metrics();
+    res.end(metrics);
+  } catch (error) {
+    res.status(500).end(error);
+  }
+});
+
 app.use("/api/users", usersRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/articles", articlesRoutes);
@@ -55,9 +119,11 @@ app.get("/api/health", async (req, res) => {
     console.log("[HEALTH] Health check requested");
     await sequelize.authenticate();
     console.log("[HEALTH] ✓ Database connection OK");
+    dbConnectionStatus.set(1);
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   } catch (error) {
     console.error("[HEALTH] ✗ Health check failed:", error.message);
+    dbConnectionStatus.set(0);
     res.status(503).json({ status: "error", message: error.message });
   }
 });
