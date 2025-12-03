@@ -12,10 +12,6 @@ data:
       - job_name: 'prometheus'
         static_configs:
           - targets: ['prometheus.monitoring.svc.cluster.local:9090']
-
-      - job_name: 'demo-app'
-        static_configs:
-          - targets: ['demo-app.monitoring.svc.cluster.local:9113']
 ---
 apiVersion: apps/v1
 kind: Deployment

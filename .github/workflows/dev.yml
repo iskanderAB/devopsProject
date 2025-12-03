@@ -10,7 +10,7 @@ env:
   DOCKERHUB: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
-  changes:
+  detect_changes:
     runs-on: ubuntu-latest
     outputs:
       frontend: ${{ steps.set_frontend.outputs.frontend }}
@@ -49,9 +49,9 @@ jobs:
           echo "backend=$changes_detected" >> $GITHUB_OUTPUT
 
   build-and-push-frontend:
-    needs: changes
+    needs: detect_changes
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.frontend == 'true'
+    if: needs.detect_changes.outputs.frontend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -70,9 +70,9 @@ jobs:
           docker push ${DOCKERHUB}/conduit-frontend:${VERSION}
 
   build-and-push-backend:
-    needs: changes
+    needs: detect_changes
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.detect_changes.outputs.backend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -148,21 +148,3 @@ jobs:
             sudo kubectl apply -f ~/backend-deployment.yml
             sudo kubectl rollout status deployment/conduit-backend
           EOF
-
-      - name: Verify deployment
-        run: |
-          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }} << 'EOF'
-            echo "=== Deployments ==="
-            sudo kubectl get deployments
-            echo "=== Pods ==="
-            sudo kubectl get pods
-            echo "=== Services ==="
-            sudo kubectl get services
-          EOF
-
-      - name: Notify deployment success
-        if: success()
-        run: |
-          echo "✅ Deployment successful to Azure Minikube!"
-          echo "Frontend: http://${{ secrets.AZURE_VM_IP }}:30080"
-          echo "Backend: http://${{ secrets.AZURE_VM_IP }}:30030"
