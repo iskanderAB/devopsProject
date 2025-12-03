@@ -10,7 +10,7 @@ env:
   DOCKERHUB: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
-  changes:
+  detect_changes:
     runs-on: ubuntu-latest
     outputs:
       frontend: ${{ steps.set_frontend.outputs.frontend }}
@@ -49,9 +49,9 @@ jobs:
           echo "backend=$changes_detected" >> $GITHUB_OUTPUT
 
   build-and-push-frontend:
-    needs: changes
+    needs: detect_changes
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.frontend == 'true'
+    if: needs.detect_changes.outputs.frontend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,9 +68,9 @@ jobs:
           docker push ${DOCKERHUB}/conduit-frontend:${VERSION}
 
   build-and-push-backend:
-    needs: changes
+    needs: detect_changes
     runs-on: ubuntu-latest
-    if: needs.changes.outputs.backend == 'true'
+    if: needs.detect_changes.outputs.backend == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -90,7 +90,6 @@ jobs:
     needs: [build-and-push-frontend, build-and-push-backend]
     runs-on: ubuntu-latest
     if: |
-      !cancelled() && 
       (needs.build-and-push-frontend.result == 'success' || 
        needs.build-and-push-backend.result == 'success' ||
        (needs.build-and-push-frontend.result == 'skipped' && needs.build-and-push-backend.result == 'skipped'))

@@ -10,7 +10,7 @@ env:
   DOCKERHUB: ${{ vars.DOCKERHUB }}
 
 jobs:
-  changes:
+  detect_changes:
     runs-on: ubuntu-latest
     outputs:
       frontend: ${{ steps.set_frontend.outputs.frontend }}
@@ -49,7 +49,7 @@ jobs:
           echo "backend=$changes_detected" >> $GITHUB_OUTPUT
 
   build-and-push-frontend:
-    needs: changes
+    needs: detect_changes
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -70,7 +70,7 @@ jobs:
           docker push ${DOCKERHUB}/conduit-frontend:${VERSION}
 
   build-and-push-backend:
-    needs: changes
+    needs: detect_changes
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -91,7 +91,7 @@ jobs:
           docker push ${DOCKERHUB}/conduit-backend:${VERSION}
 
   security-scan:
-    needs: changes
+    needs: detect_changes
     runs-on: ubuntu-latest
 
     steps:
