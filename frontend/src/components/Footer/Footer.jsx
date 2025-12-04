@@ -5,7 +5,7 @@ function Footer() {
   return (
     <div className="container">
       <Link to="/" className="logo-font">
-        conduit
+        Conduit
       </Link>
       <span className="attribution">
         An interactive learning project from{" "}
