@@ -121,7 +121,6 @@ jobs:
           sed "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-backend:${{ env.VERSION }}|g" kubernetes/backend-deployment.yml > /tmp/backend-deployment.yml
       - name: Prepare kubernetes folder for deploy
         run: |
-          rm -rf /tmp/kubernetes || true
           cp -r kubernetes /tmp/kubernetes
           if [ "${{ needs.build-and-push-frontend.result }}" = "success" ]; then
             sed -i "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-frontend:${{ env.VERSION }}|g" /tmp/kubernetes/frontend-deployment.yml
@@ -129,6 +128,10 @@ jobs:
           if [ "${{ needs.build-and-push-backend.result }}" = "success" ]; then
             sed -i "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-backend:${{ env.VERSION }}|g" /tmp/kubernetes/backend-deployment.yml
           fi
+
+      - name: Copy Kubernetes services files to Azure VM
+        run: |
+          scp kubernetes/frontend-service.yml kubernetes/backend-service.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
 
       - name: Copy kubernetes folder to Azure VM
         run: |
