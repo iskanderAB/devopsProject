@@ -89,10 +89,7 @@ jobs:
   deploy-to-azure:
     needs: [build-and-push-frontend, build-and-push-backend]
     runs-on: ubuntu-latest
-    if: |
-      (needs.build-and-push-frontend.result == 'success' || 
-       needs.build-and-push-backend.result == 'success' ||
-       (needs.build-and-push-frontend.result == 'skipped' && needs.build-and-push-backend.result == 'skipped'))
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
