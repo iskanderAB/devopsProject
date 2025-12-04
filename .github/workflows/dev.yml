@@ -89,7 +89,7 @@ jobs:
   deploy-to-azure:
     needs: [detect_changes, build-and-push-frontend, build-and-push-backend]
     runs-on: ubuntu-latest
-    if: always() && !cancelled() && (needs.build-and-push-frontend.result == 'success' || needs.build-and-push-backend.result == 'success')
+    if: always() && !cancelled()
 
     steps:
       - name: Checkout code
