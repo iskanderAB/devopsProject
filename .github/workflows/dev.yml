@@ -87,9 +87,9 @@ jobs:
           docker push ${DOCKERHUB}/conduit-backend:${VERSION}
 
   deploy-to-azure:
-    needs: [build-and-push-frontend, build-and-push-backend]
+    needs: [detect_changes, build-and-push-frontend, build-and-push-backend]
     runs-on: ubuntu-latest
-    if: always() && (needs.build-and-push-frontend.result == 'success' || needs.build-and-push-backend.result == 'success')
+    if: always() && !cancelled() && (needs.build-and-push-frontend.result == 'success' || needs.build-and-push-backend.result == 'success')
 
     steps:
       - name: Checkout code
