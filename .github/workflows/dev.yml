@@ -93,7 +93,6 @@ jobs:
   deploy-to-azure:
     needs: [build-and-push-frontend, build-and-push-backend]
     runs-on: ubuntu-latest
-    if: always()
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -117,9 +116,9 @@ jobs:
         run: |
           sed "s|IMAGE_PLACEHOLDER|${{ env.DOCKERHUB }}/conduit-backend:${{ env.VERSION }}|g" kubernetes/backend-deployment.yml > /tmp/backend-deployment.yml
 
-      - name: Copy Kubernetes files to Azure VM
+      - name: Copy Kubernetes services files to Azure VM
         run: |
-          scp kubernetes/mysql-deplyment.yml kubernetes/mysql-service.yml kubernetes/mysql-secret.yml kubernetes/frontend-service.yml kubernetes/backend-service.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
+          scp kubernetes/frontend-service.yml kubernetes/backend-service.yml ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_IP }}:~/
 
       - name: Copy frontend deployment to Azure VM
         if: needs.build-and-push-frontend.result == 'success'
